@@ -1,18 +1,19 @@
 import { Router } from 'express';
-import { User } from '../models/user.model';
+import {
+  getAllUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+} from '../controllers/user.controller';
+import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/', async (_req, res) => {
-  const users = await User.find();
-  res.json(users);
-});
-
-router.post('/', async (req, res) => {
-  const { name, email } = req.body;
-  const user = new User({ name, email });
-  await user.save();
-  res.status(201).json(user);
-});
+router.get('/', getAllUsers);
+router.get('/:id', getUserById);
+router.post('/', authenticate, createUser);
+router.put('/:id', authenticate, updateUser);
+router.delete('/:id', authenticate, deleteUser);
 
 export default router;
