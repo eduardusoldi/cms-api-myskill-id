@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn src/index.ts",
-    "seed": "ts-node src/seeders/userSeeder.ts"
+    "seed": "ts-node src/seeders/user.seeder.ts"
   },
   "keywords": [],
   "author": "",
