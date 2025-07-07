@@ -2,10 +2,10 @@ import mongoose from 'mongoose';
 
 export const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/myapp');
+    await mongoose.connect('mongodb://localhost:27017/myskill-id');
     console.log('MongoDB connected');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
+  } catch (err) {
+    console.error(err);
     process.exit(1);
   }
 };
