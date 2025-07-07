@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/user.model';
+import { AppError } from '../utils/appError';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -8,61 +9,77 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-export const getAllUsers = async (_req: Request, res: Response): Promise<void> => {
-  const users = await User.find().select('-password');
-  res.json(users);
-};
-
-export const getUserById = async (req: Request, res: Response): Promise<void> => {
-  const user = await User.findById(req.params.id).select('-password');
-  if (!user) {
-    res.status(404).json({ message: 'User not found' });
-    return;
-  }
-  res.json(user);
-};
-
-export const createUser = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const { name, username, password } = req.body;
-  const existing = await User.findOne({ username });
-
-  if (existing) {
-    res.status(400).json({ message: 'Username taken' });
-    return;
+export class UserController {
+  static async getAllUsers(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const users = await User.find().select('-password');
+      res.json(users);
+    } catch (err) {
+      next(err);
+    }
   }
 
-  const user = new User({ name, username, password });
-  await user.save();
-
-  res.status(201).json({ message: 'User created' });
-};
-
-export const updateUser = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.id;
-
-  if (userId !== req.params.id) {
-    res.status(403).json({ message: 'Forbidden' });
-    return;
+  static async getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = await User.findById(req.params.id).select('-password');
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
   }
 
-  const { name, password } = req.body;
-  const update: any = {};
-  if (name) update.name = name;
-  if (password) update.password = password;
+  static async createUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { name, username, password } = req.body;
+      const existing = await User.findOne({ username });
 
-  const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
+      if (existing) {
+        throw new AppError('Username taken', 400);
+      }
 
-  res.json({ message: 'User updated', user });
-};
+      const user = new User({ name, username, password });
+      await user.save();
 
-export const deleteUser = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.id;
-
-  if (userId !== req.params.id) {
-    res.status(403).json({ message: 'Forbidden' });
-    return;
+      res.status(201).json({ message: 'User created' });
+    } catch (err) {
+      next(err);
+    }
   }
 
-  await User.findByIdAndDelete(req.params.id);
-  res.json({ message: 'User deleted' });
-};
+  static async updateUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      if (userId !== req.params.id) {
+        throw new AppError('Forbidden', 403);
+      }
+
+      const { name, password } = req.body;
+      const update: any = {};
+      if (name) update.name = name;
+      if (password) update.password = password;
+
+      const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
+      res.json({ message: 'User updated', user });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.id;
+
+      if (userId !== req.params.id) {
+        throw new AppError('Forbidden', 403);
+      }
+
+      await User.findByIdAndDelete(req.params.id);
+      res.json({ message: 'User deleted' });
+    } catch (err) {
+      next(err);
+    }
+  }
+}
