@@ -1,32 +1,28 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
-import { User } from '../models/user.model';
 import { connectDB } from '../config/db';
+import { User } from '../models/user.model';
 
-const seedUsers = async () => {
-  await connectDB();
+(async () => {
+  try {
+    await connectDB();
+    console.log('✅ MongoDB connected');
 
-  const existing = await User.findOne({ username: 'admin' });
-  if (existing) {
-    console.log('⚠️ Admin user already exists. Skipping...');
-    return mongoose.disconnect();
+    // Optional: Clean up existing user
+    await User.deleteMany({ username: 'admin' });
+
+    // Use plain password — let pre('save') hash it
+    const admin = new User({
+      name: 'Admin User',
+      username: 'admin',
+      password: 'admin123', // plain text — will be hashed by pre('save')
+    });
+
+    await admin.save();
+    console.log('✅ Seeded admin user: admin / admin123');
+
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Seeding error:', error);
+    process.exit(1);
   }
-
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-
-  const user = new User({
-    name: 'Admin User',
-    username: 'admin',
-    password: hashedPassword,
-  });
-
-  await user.save();
-  console.log('✅ Seeded admin user: admin / admin123');
-
-  mongoose.disconnect();
-};
-
-seedUsers().catch((err) => {
-  console.error('❌ Seeder failed:', err);
-  mongoose.disconnect();
-});
+})();
