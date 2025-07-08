@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { AppError } from '../utils/appError'; // Adjust path if needed
 
-const SECRET = 'your_jwt_secret';
+const SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 interface JwtPayload {
   id: string;
@@ -10,22 +11,25 @@ interface JwtPayload {
 
 export const authenticate = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void => {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1];
+  if (!authHeader?.startsWith('Bearer ')) {
+    return next(new AppError('Authorization must be a Bearer token', 401));
+  }
 
-  if (!token) {
-    res.status(401).json({ message: 'Unauthorized' });
-    return;
+  const access_token = authHeader?.split(' ')[1];
+
+  if (!access_token) {
+    return next(new AppError('Access denied. Please log in to continue.', 401));
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET) as JwtPayload;
+    const decoded = jwt.verify(access_token, SECRET) as JwtPayload;
     (req as any).user = decoded;
     next();
   } catch (error) {
-    res.status(403).json({ message: 'Forbidden' });
+    next(error);
   }
 };
