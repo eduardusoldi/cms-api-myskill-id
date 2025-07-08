@@ -157,18 +157,22 @@ export class ArticleController {
     static async deleteArticle(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const article = await Article.findById(req.params.id);
+
             if (!article) {
                 throw new AppError('Article not found', 404, 'ARTICLE_NOT_FOUND');
             }
 
-            if (article.author.toString() !== req.user?.id) {
+            const isAuthor = article.author?.id?.toString() === req.user?.id;
+
+            if (!isAuthor) {
                 throw new AppError('You are not allowed to delete this article.', 403, 'FORBIDDEN_DELETE');
             }
 
             await article.deleteOne();
-            res.status(204).send();
+            res.status(200).json({ message: 'Article deleted successfully' });
         } catch (err) {
             next(err);
         }
     }
+
 }
