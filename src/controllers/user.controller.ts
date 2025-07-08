@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/user.model';
 import { AppError } from '../utils/appError';
@@ -12,7 +14,12 @@ interface AuthenticatedRequest extends Request {
 export class UserController {
   static async getAllUsers(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const users = await User.find().select('-password');
+      const users = await User.find().select('-password -__v');
+
+      if (!users || users.length === 0) {
+        throw new AppError('No users found', 404);
+      }
+
       res.json(users);
     } catch (err) {
       next(err);
@@ -21,7 +28,12 @@ export class UserController {
 
   static async getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const user = await User.findById(req.params.id).select('-password');
+
+      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        throw new AppError('Invalid ID format', 400);
+      }
+
+      const user = await User.findById(req.params.id).select('-password -__v');
       if (!user) {
         throw new AppError('User not found', 404);
       }
@@ -34,52 +46,92 @@ export class UserController {
   static async createUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { name, username, password } = req.body;
-      const existing = await User.findOne({ username });
+      const errorMsg: string[] = [];
 
-      if (existing) {
-        throw new AppError('Username taken', 400);
-      }
+      if (!name || !String(name).trim()) errorMsg.push('name is required');
+      if (!username || !String(username).trim()) errorMsg.push('username is required');
+      if (!password || !String(password).trim()) errorMsg.push('password is required');
 
-      const user = new User({ name, username, password });
+      if (errorMsg.length > 0) throw new AppError(errorMsg.join(', '), 400);
+
+      const existing = await User.findOne({ username: String(username).trim() });
+      if (existing) throw new AppError('Username is already taken', 400);
+
+      const user = new User({
+        name: String(name).trim(),
+        username: String(username).trim(),
+        password: String(password).trim()
+      });
+
       await user.save();
 
-      res.status(201).json({ message: 'User created' });
+      const { password: _, __v, ...userWithoutPassword } = user.toObject();
+      res.status(201).json({
+        message: 'User created successfully',
+        user: userWithoutPassword,
+      });
     } catch (err) {
       next(err);
     }
   }
 
+
+
   static async updateUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user?.id;
-      if (userId !== req.params.id) {
-        throw new AppError('Forbidden', 403);
+      const paramId = req.params.id;
+
+      if (userId !== paramId) {
+        throw new AppError('You do not have permission to update this user.', 403);
       }
 
-      const { name, password } = req.body;
-      const update: any = {};
-      if (name) update.name = name;
-      if (password) update.password = password;
+      const { name, password, username } = req.body;
 
-      const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
-      res.json({ message: 'User updated', user });
+      const updateFields: any = {};
+      if (name !== undefined) updateFields.name = String(name);
+      if (username !== undefined) updateFields.username = String(username);
+      if (password !== undefined) {
+        const hashedPassword = await bcrypt.hash(String(password), 10);
+        updateFields.password = hashedPassword;
+      }
+
+
+      const updatedUser = await User.findByIdAndUpdate(paramId, updateFields, { new: true }).select('-password -__v');
+
+      if (!updatedUser) {
+        throw new AppError('User not found or could not be updated.', 404);
+      }
+
+      res.json({
+        message: 'User information updated successfully.',
+        user: updatedUser,
+      });
     } catch (err) {
       next(err);
     }
+
   }
 
   static async deleteUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user?.id;
+      const paramId = req.params.id;
 
-      if (userId !== req.params.id) {
-        throw new AppError('Forbidden', 403);
+      if (userId !== paramId) {
+        throw new AppError('You do not have permission to delete this user.', 403);
       }
 
-      await User.findByIdAndDelete(req.params.id);
-      res.json({ message: 'User deleted' });
+      const deletedUser = await User.findByIdAndDelete(paramId);
+
+      if (!deletedUser) {
+        throw new AppError('User not found or already deleted.', 404);
+      }
+
+      res.json({ message: 'Your account has been successfully deleted.' });
     } catch (err) {
       next(err);
     }
   }
+
 }
