@@ -4,7 +4,10 @@ export interface IArticle extends Document {
   status: 'draft' | 'published';
   title: string;
   content: string;
-  author: Schema.Types.ObjectId;
+  author: {
+    id: Schema.Types.ObjectId;
+    username: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,9 +21,13 @@ const articleSchema = new Schema<IArticle>(
     },
     title: { type: String, required: true },
     content: { type: String, required: true },
-    author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    author: {
+      id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      username: { type: String, required: true },
+    },
   },
   { timestamps: true }
 );
+
 
 export default model<IArticle>('Article', articleSchema);

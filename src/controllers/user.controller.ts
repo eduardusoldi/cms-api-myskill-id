@@ -39,14 +39,17 @@ export class UserController {
 
   static async createUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (!req.body || Object.keys(req.body).length === 0) {
+        throw new AppError('Request body cannot be empty.', 400, 'EMPTY_BODY');
+      }
       const { name, username, password } = req.body;
       const errorMsg: string[] = [];
 
-      if (!name || !String(name).trim()) errorMsg.push('name is required');
-      if (!username || !String(username).trim()) errorMsg.push('username is required');
-      if (!password || !String(password).trim()) errorMsg.push('password is required');
+      if (!name || !String(name).trim()) errorMsg.push('Name is required');
+      if (!username || !String(username).trim()) errorMsg.push('Username is required');
+      if (!password || !String(password).trim()) errorMsg.push('Password is required');
 
-      if (errorMsg.length > 0) throw new AppError(errorMsg.join(', '), 400, 'VALIDATION_ERROR');
+      if (errorMsg.length > 0) throw new AppError(errorMsg.join('; '), 400, 'VALIDATION_ERROR');
 
       const existing = await User.findOne({ username: String(username).trim() });
       if (existing) throw new AppError('Username is already taken', 400, 'USERNAME_TAKEN');
@@ -71,6 +74,9 @@ export class UserController {
 
   static async updateUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (!req.body || Object.keys(req.body).length === 0) {
+        throw new AppError('Request body cannot be empty.', 400, 'EMPTY_BODY');
+      }
       const userId = req.user?.id;
       const paramId = req.params.id;
 
