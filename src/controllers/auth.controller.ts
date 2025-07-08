@@ -10,18 +10,19 @@ export class AuthController {
   static async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { username, password } = req.body;
+
       if (!String(username).trim() || !String(password).trim()) {
-        throw new AppError('Username and password are required', 400);
+        throw new AppError('Username and password are required', 400, 'CREDENTIALS_REQUIRED');
       }
 
       const user = await User.findOne({ username });
       if (!user) {
-        throw new AppError('Invalid credentials', 401);
+        throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
       }
 
       const isValidPassword = await bcrypt.compare(String(password), user.password);
       if (!isValidPassword) {
-        throw new AppError('Invalid credentials', 401);
+        throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
       }
 
       const access_token = jwt.sign(
@@ -41,5 +42,4 @@ export class AuthController {
       message: 'Logout successful. Please clear the access_token on the client side (e.g. localStorage).'
     });
   }
-
 }

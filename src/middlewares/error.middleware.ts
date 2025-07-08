@@ -1,42 +1,48 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { AppError } from '../utils/appError';
 
-export const errorHandler = (
-  err: any,
+export const errorHandler: ErrorRequestHandler = function (
+  err,
   _req: Request,
   res: Response,
   _next: NextFunction
-) => {
-  // Custom application error
+): void {
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
+    res.status(err.statusCode).json({
       message: err.message,
+      errorCode: err.errorCode || 'APP_ERROR',
     });
+    return;
   }
 
-  // Mongoose invalid ObjectId error
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
-    return res.status(400).json({
+    res.status(400).json({
       message: `Invalid ID format: ${err.value}`,
+      errorCode: 'INVALID_OBJECT_ID',
     });
+    return;
   }
 
-  // JWT errors
   if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
+    res.status(401).json({
       message: 'Invalid access token. Please log in again.',
+      errorCode: 'INVALID_TOKEN',
     });
+    return;
   }
 
   if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({
+    res.status(401).json({
       message: 'Your session has expired. Please log in again.',
+      errorCode: 'TOKEN_EXPIRED',
     });
+    return;
   }
 
-  // Fallback for unhandled errors
   console.error('Unhandled error:', err);
-  return res.status(500).json({
-    message: 'Something went wrong on our end. Please try again later.',
+
+  res.status(500).json({
+    message: 'Something went wrong. Please try again later.',
+    errorCode: 'INTERNAL_SERVER_ERROR',
   });
 };

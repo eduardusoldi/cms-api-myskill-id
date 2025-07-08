@@ -1,18 +1,16 @@
 import express from 'express';
 import { connectDB } from './config/db';
-import userRoutes from './routes/user.routes';
-import authRoutes from './routes/auth.routes';
 import { errorHandler } from './middlewares/error.middleware';
+import routes from './routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
+app.use('/api', routes);
 
-app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
+console.log(typeof errorHandler); // should be 'function'
 
-// 👇 This must be last
 app.use(errorHandler);
 
 connectDB().then(() => {

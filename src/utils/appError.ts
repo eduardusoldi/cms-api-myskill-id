@@ -1,11 +1,12 @@
 export class AppError extends Error {
   public statusCode: number;
+  public errorCode: string;
 
-  constructor(message: string, statusCode: number) {
+  constructor(message: string, statusCode = 500, errorCode = 'APP_ERROR') {
     super(message);
     this.statusCode = statusCode;
-
-    // Maintains proper stack trace (only in V8 engines)
+    this.errorCode = errorCode;
+    
     Error.captureStackTrace(this, this.constructor);
   }
 }
