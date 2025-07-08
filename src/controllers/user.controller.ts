@@ -11,7 +11,7 @@ export class UserController {
       const users = await User.find().select('-password -__v');
 
       if (!users || users.length === 0) {
-        throw new AppError('No users found', 404);
+        throw new AppError('No users found', 404, 'NO_USERS_FOUND');
       }
 
       res.json(users);
@@ -22,15 +22,15 @@ export class UserController {
 
   static async getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-
       if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        throw new AppError('Invalid ID format', 400);
+        throw new AppError('Invalid ID format', 400, 'INVALID_ID_FORMAT');
       }
 
       const user = await User.findById(req.params.id).select('-password -__v');
       if (!user) {
-        throw new AppError('User not found', 404);
+        throw new AppError('User not found', 404, 'USER_NOT_FOUND');
       }
+
       res.json(user);
     } catch (err) {
       next(err);
@@ -46,15 +46,15 @@ export class UserController {
       if (!username || !String(username).trim()) errorMsg.push('username is required');
       if (!password || !String(password).trim()) errorMsg.push('password is required');
 
-      if (errorMsg.length > 0) throw new AppError(errorMsg.join(', '), 400);
+      if (errorMsg.length > 0) throw new AppError(errorMsg.join(', '), 400, 'VALIDATION_ERROR');
 
       const existing = await User.findOne({ username: String(username).trim() });
-      if (existing) throw new AppError('Username is already taken', 400);
+      if (existing) throw new AppError('Username is already taken', 400, 'USERNAME_TAKEN');
 
       const user = new User({
         name: String(name).trim(),
         username: String(username).trim(),
-        password: String(password).trim()
+        password: String(password).trim(),
       });
 
       await user.save();
@@ -69,15 +69,13 @@ export class UserController {
     }
   }
 
-
-
   static async updateUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user?.id;
       const paramId = req.params.id;
 
       if (userId !== paramId) {
-        throw new AppError('You do not have permission to update this user.', 403);
+        throw new AppError('You do not have permission to update this user.', 403, 'FORBIDDEN_UPDATE');
       }
 
       const { name, password, username } = req.body;
@@ -90,11 +88,10 @@ export class UserController {
         updateFields.password = hashedPassword;
       }
 
-
       const updatedUser = await User.findByIdAndUpdate(paramId, updateFields, { new: true }).select('-password -__v');
 
       if (!updatedUser) {
-        throw new AppError('User not found or could not be updated.', 404);
+        throw new AppError('User not found or could not be updated.', 404, 'UPDATE_FAILED');
       }
 
       res.json({
@@ -104,7 +101,6 @@ export class UserController {
     } catch (err) {
       next(err);
     }
-
   }
 
   static async deleteUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
@@ -113,13 +109,13 @@ export class UserController {
       const paramId = req.params.id;
 
       if (userId !== paramId) {
-        throw new AppError('You do not have permission to delete this user.', 403);
+        throw new AppError('You do not have permission to delete this user.', 403, 'FORBIDDEN_DELETE');
       }
 
       const deletedUser = await User.findByIdAndDelete(paramId);
 
       if (!deletedUser) {
-        throw new AppError('User not found or already deleted.', 404);
+        throw new AppError('User not found or already deleted.', 404, 'DELETE_FAILED');
       }
 
       res.json({ message: 'Your account has been successfully deleted.' });
@@ -127,5 +123,4 @@ export class UserController {
       next(err);
     }
   }
-
 }
