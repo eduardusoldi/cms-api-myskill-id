@@ -1,16 +1,5 @@
-import { Schema, model, Document } from 'mongoose';
-
-export interface IArticle extends Document {
-  status: 'draft' | 'published';
-  title: string;
-  content: string;
-  author: {
-    id: Schema.Types.ObjectId;
-    username: string;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Schema, model } from 'mongoose';
+import { IArticle } from '../types/article';
 
 const articleSchema = new Schema<IArticle>(
   {
