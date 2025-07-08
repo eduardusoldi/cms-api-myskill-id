@@ -3,13 +3,7 @@ import bcrypt from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/user.model';
 import { AppError } from '../utils/appError';
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    username: string;
-  };
-}
+import { AuthenticatedRequest } from '../types/express';
 
 export class UserController {
   static async getAllUsers(_req: Request, res: Response, next: NextFunction): Promise<void> {
