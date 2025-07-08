@@ -1,13 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../utils/appError';
+import { JwtPayload } from '../types/jwt'; 
 
 const SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
-interface JwtPayload {
-  id: string;
-  username: string;
-}
 
 export const authenticate = (
   req: Request,

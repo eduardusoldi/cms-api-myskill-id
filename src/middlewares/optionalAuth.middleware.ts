@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/jwt'; 
 
-
 const SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export const optionalAuth = (
