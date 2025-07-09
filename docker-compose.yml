@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  api:
+    container_name: myskill-id-cms-api
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/myskill-id-docker
+      - JWT_SECRET=your_jwt_secret_here
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  mongodb:
+    image: mongo:6.0
+    container_name: myskill-id-mongo
+    restart: always
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
