@@ -7,7 +7,7 @@ import { User } from '../models/user.model';
 
     const existingAdmin = await User.findOne({ username: 'admin' });
     if (existingAdmin) {
-      console.log('⚠️ Admin already exists, skipping seeding.');
+      console.log('Admin already exists, skipping seeding.');
       process.exit(0);
     }
 
