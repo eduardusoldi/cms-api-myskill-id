@@ -76,8 +76,6 @@ export class ArticleController {
         }
     }
 
-
-
     static async getArticleById(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const article = await Article.findById(req.params.id).select('-__v');
@@ -106,8 +104,6 @@ export class ArticleController {
             next(err);
         }
     }
-
-
 
     static async updateArticle(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -154,7 +150,6 @@ export class ArticleController {
         }
     }
 
-
     static async deleteArticle(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const article = await Article.findById(req.params.id);
@@ -175,5 +170,4 @@ export class ArticleController {
             next(err);
         }
     }
-
 }
