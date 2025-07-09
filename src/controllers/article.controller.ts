@@ -111,6 +111,7 @@ export class ArticleController {
 
     static async updateArticle(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
+
             if (!req.body || Object.keys(req.body).length === 0) {
                 throw new AppError('Request body cannot be empty.', 400, 'EMPTY_BODY');
             }
@@ -120,7 +121,7 @@ export class ArticleController {
                 throw new AppError('Article not found', 404, 'ARTICLE_NOT_FOUND');
             }
 
-            if (article.author.toString() !== req.user?.id) {
+            if (article.author?.id?.toString() !== req.user?.id) {
                 throw new AppError('You are not allowed to update this article.', 403, 'FORBIDDEN_UPDATE');
             }
 
