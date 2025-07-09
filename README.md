@@ -80,13 +80,16 @@ docker compose up -d
 
 ## API Documentation
 
-### Local API Documentation
 For detailed information on available endpoints, request formats, and responses, check out the [API Documentation](./API_DOCS.md).
 
-### Postman Collection
+#### Postman Collection
 
-📁 [Download Postman Collection](https://www.postman.com/your-collection-link)
-Or import the provided `.postman_collection.json` file in the repository.
+You can import the Postman collection and environment directly into Postman.
+
+- [Postman Collection file](./postman/CMS%20API%20-%20MySkill.id.postman_collection.json)
+- [Postman Environment file](./postman/CMS%20API%20-%20MySkill.id.postman_environment.json)
+
+Both files are located in the root of this repository.
 
 ### Base URL (Local)
 
@@ -130,5 +133,5 @@ It wil create this user:
 
 ##  Author
 
-Eduardus Oldi
-[LinkedIn](https://www.linkedin.com/in/eduardusoldi/) • [GitHub](https://github.com/eduardusoldi)
+Eduardus Oldi  
+[LinkedIn](https://www.linkedin.com/in/eduardusoldi/) | [GitHub](https://github.com/eduardusoldi)
